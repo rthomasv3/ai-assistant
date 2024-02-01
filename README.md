@@ -1,8 +1,8 @@
 # AI Assistant
 
-This is a simple AI chat assistant built using Rust as the backend and Tauri + Vue 3 for the frontend.
+This is a simple AI chat assistant built using Rust as the backend and [Tauri](https://tauri.app/) + [Vue 3](https://vuejs.org/) for the frontend.
 
-[AI Assistant Screenshot](screenshot.jpg)
+![AI Assistant Screenshot](screenshot.jpg)
 
 ## Recommended IDE Setup
 
