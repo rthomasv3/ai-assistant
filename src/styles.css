@@ -44,9 +44,22 @@ html, body {
   margin-bottom: 0.75em;
 }
 
+pre {
+  background-color: #0d1117;
+  padding: 1em;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+}
+
+code {
+  background-color: #0d1117;
+  padding: 3px;
+  border-radius: 0.25rem;
+}
+
 .user-message {
   align-self: self-end;
-  max-width: 45%;
+  max-width: 85%;
   border-radius: 0.5rem;
   padding: 0.75em;
   background-color: #2563eb;
@@ -56,7 +69,7 @@ html, body {
 
 .bot-message {
   align-self: self-start;
-  max-width: 45%;
+  max-width: 85%;
   border-radius: 0.5rem;
   padding: 0.75em;
   background-color: #404040;

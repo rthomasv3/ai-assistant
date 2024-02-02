@@ -1,7 +1,7 @@
 <template>
     <div class="messages">
         <div v-for="message in messages" :class="message.isUser ? 'user-message' : 'bot-message'">
-            <p>{{ message.text }}</p>
+            <div v-html="message.text"></div>
         </div>
         <div ref="messageAnchor"></div>
     </div>
@@ -22,12 +22,26 @@
 import { ref, computed, watch } from "vue";
 import { useStore } from "vuex";
 import { invoke } from "@tauri-apps/api/tauri";
+import markdownit from "markdown-it";
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github-dark.min.css';
 
 const messageAnchor = ref(null)
 const modelResponse = ref("");
 const message = ref("");
 const formDisabled = ref(false);
 const store = useStore();
+const md = markdownit({
+  highlight: function (str, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        return hljs.highlight(str, { language: lang }).value;
+      } catch (__) {}
+    }
+
+    return ''; // use external default escaping
+  }
+});
 
 const messages = computed(() => {
     return store.state.messages;
@@ -44,7 +58,7 @@ watch(messageCount, () => {
 async function sendMessage() {
     store.commit("addMessage", {
         isUser: true,
-        text: message.value
+        text: renderAsMarkdown(message.value)
     });
 
     store.commit("addMessage", {
@@ -63,7 +77,7 @@ async function sendMessage() {
 
     store.commit("addMessage", {
         isUser: false,
-        text: modelResponse.value
+        text: renderAsMarkdown(modelResponse.value)
     });
 
     formDisabled.value = false;
@@ -80,5 +94,9 @@ function scrollToBottom() {
 function reset() {
     invoke("reset_conversation");
     store.commit("resetConversation");
+}
+
+function renderAsMarkdown(text) {
+    return md.render(text);
 }
 </script>

@@ -19,10 +19,9 @@ impl ConversationService {
         let model_path = std::env::var("MODEL_PATH").expect("MODEL_PATH must be set");
 
         let model_params = ModelParameters {
-            prefer_mmap: false,
+            prefer_mmap: true,
             use_gpu: true,
             context_size: 1024,
-            // gpu_layers: Some(128),
             ..Default::default()
         };
 
@@ -49,8 +48,8 @@ impl ConversationService {
             model: Mutex::from(model),
             conversation: Mutex::from(conversation),
             persona: "Transcript of a dialog, where the User interacts with an Assistant named Bob. Bob is helpful, kind, honest, good at writing, and never fails to answer the User's requests immediately and with precision.",
-            assistant_name: "### Bob:",
-            user_name: "### User:"
+            assistant_name: "Bob:",
+            user_name: "User:"
         }
     }
     

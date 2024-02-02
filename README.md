@@ -2,7 +2,9 @@
 
 This is a simple AI chat assistant built using [Rust](https://www.rust-lang.org/) as the backend and [Tauri](https://tauri.app/) + [Vue 3](https://vuejs.org/) for the frontend.
 
-![AI Assistant Screenshot](screenshot.jpg)
+![ai-assistant screenshot](screenshot.jpg)
+
+![ai-assistant screenshot with code](screenshot2.jpg)
 
 ## Models
 
