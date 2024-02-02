@@ -43,7 +43,31 @@ impl ConversationService {
         )
         .unwrap_or_else(|err| panic!("Failed to load mode from {model_path:?}: {err}"));
 
+        let conversation = Self::get_default_conversation();
+
+        ConversationService {
+            model: Mutex::from(model),
+            conversation: Mutex::from(conversation),
+            persona: "Transcript of a dialog, where the User interacts with an Assistant named Bob. Bob is helpful, kind, honest, good at writing, and never fails to answer the User's requests immediately and with precision.",
+            assistant_name: "### Bob:",
+            user_name: "### User:"
+        }
+    }
+    
+    pub fn add_message(&self, is_user: bool, text: &str) {
+        self.conversation.lock().unwrap().messages.push(Message {
+            is_user: is_user,
+            text: text.to_string()
+        });
+    }
+
+    pub fn reset_conversation(&self) {
+        *self.conversation.lock().unwrap() = Self::get_default_conversation();
+    }
+
+    fn get_default_conversation() -> Conversation {
         let mut messages: Vec<Message> = Vec::new();
+
         messages.push(Message{
             is_user: true,
             text: String::from("Hello, Bob.")
@@ -61,23 +85,8 @@ impl ConversationService {
             text: String::from("The largest city in Europe is Moscow, the capital of Russia.")
         });
 
-        let conversation = Conversation {
+        Conversation {
             messages: messages
-        };
-
-        ConversationService {
-            model: Mutex::from(model),
-            conversation: Mutex::from(conversation),
-            persona: "Transcript of a dialog, where the User interacts with an Assistant named Bob. Bob is helpful, kind, honest, good at writing, and never fails to answer the User's requests immediately and with precision.",
-            assistant_name: "### Bob:",
-            user_name: "### User:"
         }
-    }
-    
-    pub fn add_message(&self, is_user: bool, text: &str) {
-        self.conversation.lock().unwrap().messages.push(Message {
-            is_user: is_user,
-            text: text.to_string()
-        });
     }
 }

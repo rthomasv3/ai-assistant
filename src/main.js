@@ -13,8 +13,11 @@ const store = createStore({
         addMessage(state, message) {
             state.messages.push(message);
         },
-        removeLast(state) {
+        removeLastMessage(state) {
             state.messages.pop();
+        },
+        resetConversation(state) {
+            state.messages = [];
         }
     }
 })

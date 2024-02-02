@@ -23,12 +23,17 @@ async fn send_message(text: &str, conversation_service: State<'_, ConversationSe
     return Ok(model_response);
 }
 
+#[tauri::command]
+fn reset_conversation(conversation_service: State<'_, ConversationService>) {
+    conversation_service.reset_conversation();
+}
+
 fn main() {
     let conversation_service = ConversationService::new();
 
     tauri::Builder::default()
         .manage(conversation_service)
-        .invoke_handler(tauri::generate_handler![send_message])
+        .invoke_handler(tauri::generate_handler![send_message, reset_conversation])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
