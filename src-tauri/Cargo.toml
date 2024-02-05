@@ -16,8 +16,7 @@ tauri-build = { version = "1.5", features = [] }
 tauri = { version = "1.5", features = ["shell-open"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-llm = { git = "https://github.com/rustformers/llm.git", branch = "main", features = ["cublas"] } # main branch for bin models
-# llm = { git = "https://github.com/rustformers/llm.git", branch = "gguf" } # main branch for bin models
+llm = { git = "https://github.com/rustformers/llm.git", branch = "main" } # main branch for bin models, or gguf branch
 dotenv = { version = "0.15.0" }
 rand = { version = "0.8.5" }
 
@@ -25,6 +24,9 @@ rand = { version = "0.8.5" }
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+cublas = ["llm/cublas"]
+clblast = ["llm/clblast"]
+metal = ["llm/metal"]
 
 [profile.release]
 panic = "abort" # Strip expensive panic clean-up logic
