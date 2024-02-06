@@ -77,18 +77,28 @@ async function sendMessage() {
         formDisabled.value = true;
         message.value = "";
 
-        modelResponse.value = await invoke("send_message", { text: userInput }).catch(error => console.error(error));
-
-        store.commit("removeLastMessage");
-
-        store.commit("addMessage", {
-            isUser: false,
-            text: renderAsMarkdown(modelResponse.value)
+        var error = null;
+        modelResponse.value = await invoke("send_message", { text: userInput })
+        .catch(e => {
+            console.error(e);
+            error = e;
         });
 
-        formDisabled.value = false;
+        if (error === null) {
+            store.commit("removeLastMessage");
 
-        scrollToBottom();
+            store.commit("addMessage", {
+                isUser: false,
+                text: renderAsMarkdown(modelResponse.value)
+            });
+
+            scrollToBottom();
+        } else {
+            store.commit("removeLastMessage");
+            store.commit("removeLastMessage");
+        }
+
+        formDisabled.value = false;
     }
 }
 

@@ -53,17 +53,8 @@ watch(() => props.initialized, async () => {
     if (initialized.value === false && props.initialized === true) {
         await getModels();
 
-        if (props.loadedModel) {
-            var config = await invoke("get_config");
-
-            if (config.model_path) {
-                var index = model_paths.value.indexOf(config.model_path);
-                if (index > -1) {
-                    selected_path.value = index;
-                }
-            }
-        } else {
-            this.model_paths.splice(0, 0, "No Model Loaded");
+        if (!props.loadedModel) {
+            model_paths.value.splice(0, 0, "No Model Loaded");
             selected_path.value = 0;
         }
 
@@ -76,6 +67,7 @@ async function getModels() {
 
     if (models.length > 0) {
         model_paths.value = models;
+        await setModelPathIndex();
     } else {
         model_paths.value = [ "No Models" ];
     }
@@ -109,7 +101,16 @@ function hideSettingsDialog() {
 
 async function settingsSaved() {
     showSettings.value = false;
-    
+}
+
+async function setModelPathIndex() {
+    var config = await invoke("get_config");
+
+    if (config.model_path) {
+        selected_path.value = model_paths.value.indexOf(config.model_path);
+    } else {
+        selected_path.value = -1;
+    }
 }
 </script>
 

@@ -35,17 +35,20 @@ impl ConversationService {
         // )
         // .unwrap_or_else(|err| panic!("Failed to load model from {model_path:?}: {err}"));
 
-        let model_path = config.model_path.clone().unwrap();
         let mut model: Option<Llama> = None;
         
-        if Path::new(&model_path).exists() {
-            model = Some(llm::load::<Llama>(
-                &PathBuf::from(&model_path),
-                llm::TokenizerSource::Embedded,
-                model_params,
-                llm::load_progress_callback_stdout
-            )
-            .unwrap_or_else(|err| panic!("Failed to load mode from {model_path:?}: {err}")));
+        if config.model_path.is_some() {
+            let model_path = config.model_path.clone().unwrap();
+
+            if Path::new(&model_path).exists() {
+                model = Some(llm::load::<Llama>(
+                    &PathBuf::from(&model_path),
+                    llm::TokenizerSource::Embedded,
+                    model_params,
+                    llm::load_progress_callback_stdout
+                )
+                .unwrap_or_else(|err| panic!("Failed to load mode from {model_path:?}: {err}")));
+            }
         }
 
         let conversation = Self::get_default_conversation();
