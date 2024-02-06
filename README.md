@@ -1,10 +1,11 @@
 # AI Assistant
 
-This is a simple AI chat assistant built using [Rust](https://www.rust-lang.org/) as the backend and [Tauri](https://tauri.app/) + [Vue 3](https://vuejs.org/) for the frontend.
+This is a simple AI chat assistant built using [Rust](https://www.rust-lang.org/) as the backend and [Tauri](https://tauri.app/) + [Vue 3](https://vuejs.org/) for the frontend. It supports all desktop platforms and can use your GPU to improve performance. The entire app compiles to just one executable and should be fairly small (~under 7MB). To get started you just need to add your models in the Model Folder found in Settings.
 
-![ai-assistant screenshot](screenshot.jpg)
+GPU acceleration is set to `cublas` by default for both Windows and Linux, so to use the release you'll need the CUDA Toolkit installed. For Mac, `metal` is on by default.
 
-![ai-assistant screenshot with code](screenshot2.jpg)
+![ai-assistant screenshot](screenshot3.png)
+
 
 ## Models
 
@@ -30,7 +31,22 @@ GPU support is determined by the `features` of the `llm` dependency.
 
 ```toml
 [dependencies]
-llm = { git = "https://github.com/rustformers/llm.git", branch = "main", features = ["cublas"] } 
+llm = { git = "https://github.com/rustformers/llm.git", branch = "main" }
+
+[features]
+cublas = ["llm/cublas"]
+clblast = ["llm/clblast"]
+metal = ["llm/metal"] 
+```
+
+Features can be turned on in the `tauri.<platform>.conf.json` file.
+
+```json
+{
+    "build": {
+      "features": [ "cublas" ]
+    }
+}
 ```
 
 ### Windows
@@ -59,8 +75,6 @@ CLBlast can be installed on Linux through various package managers. For example,
 
 Xcode and the associated command-line tools should be installed on your system, and you should be running a version of MacOS that supports Metal. For more detailed information, please consult the [official Metal documentation](https://developer.apple.com/metal/).
 
-To enable Metal using the CLI, ensure it was built successfully using `--features=metal` and then pass the `--use-gpu` flag.
-
 
 ## Building
 
@@ -80,19 +94,13 @@ More detailed instructions can be found [here](https://tauri.app/v1/guides/getti
 
 ### Getting Started
 
-First you'll need to create a `.env` file and add your model path.
-
-```
-MODEL_PATH="C:\\Users\\You\\Downloads\\Wizard-Vicuna-7B-Uncensored.ggmlv3.q4_1.bin"
-```
-
-Then you need to make sure the front end is ready to go:
+First install dependencies for the frontend:
 
 ```
 npm install
 ```
 
-To run the project you can use the following command:
+To run the project you can then use the following command:
 
 ```
 cargo tauri dev
@@ -104,64 +112,4 @@ And to build you can use:
 cargo tauri build
 ```
 
-A Github Action can also be used. Below is an example:
-
-```yaml
-name: Release
-on:
-  push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
-
-jobs:
-  release:
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [macos-latest, ubuntu-20.04, windows-latest]
-    runs-on: ${{ matrix.platform }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
-        # Add libayatana-appindicator3-dev for the system tray feature.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev librsvg2-dev
-
-      - name: Rust setup
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './src-tauri -> target'
-
-      - name: Sync node version and setup cache
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-          cache: 'npm' # Set this to npm, yarn or pnpm.
-
-      - name: Install frontend dependencies
-        # If you don't have `beforeBuildCommand` configured you may want to build your frontend here too.
-        run: npm install # Change this to npm, yarn or pnpm.
-
-      - name: Build the app
-        uses: tauri-apps/tauri-action@v0
-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
-          releaseName: 'ai-assistant v__VERSION__' # tauri-action replaces \_\_VERSION\_\_ with the app version.
-          releaseBody: 'See the assets to download and install this version.'
-          releaseDraft: true
-          prerelease: false
-```
+After starting the program you'll need to add any models to your Model Folder directory (defaults to app data for the given platform). Then you can hit the refresh button next to the models list and select your model.

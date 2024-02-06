@@ -4,23 +4,38 @@
 mod models;
 mod conversation_service;
 
-use crate::models::conversation::Conversation;
+use crate::models::config::Config;
 use conversation_service::ConversationService;
-use llm::InferenceSessionConfig;
 use llm::KnownModel; // main
+use llm::InferenceSessionConfig;
+use tauri::AppHandle;
+use tauri::Manager;
 use tauri::State;
+use tauri::api::dialog;
 use std::convert::Infallible;
+use std::fs;
+use std::sync::Mutex;
+
+type WrappedConfig = Mutex<Option<Config>>;
 
 #[tauri::command]
-async fn send_message(text: &str, conversation_service: State<'_, ConversationService>) -> Result<String, ()> {
-    // add the user message to conversation history
-    conversation_service.add_message(true, text);
-    // get response from model
-    let model_response = get_model_response(conversation_service.inner());
-    // add response to conversation
-    conversation_service.add_message(false, &model_response);
-    
-    return Ok(model_response);
+async fn send_message(text: &str, conversation_service: State<'_, ConversationService>) -> Result<String, String> {
+    let result: Result<String, String>;
+
+    if conversation_service.model.lock().unwrap().is_some() {
+        // add the user message to conversation history
+        conversation_service.add_message(true, text);
+        // get response from model
+        let model_response = get_model_response(conversation_service.inner());
+        // add response to conversation
+        conversation_service.add_message(false, &model_response);
+
+        result = Ok(model_response);
+    } else {
+        result = Err("No model loaded.".into())
+    }
+
+    result
 }
 
 #[tauri::command]
@@ -28,12 +43,74 @@ fn reset_conversation(conversation_service: State<'_, ConversationService>) {
     conversation_service.reset_conversation();
 }
 
-fn main() {
-    let conversation_service = ConversationService::new();
+#[tauri::command]
+fn get_config(config: State<'_, WrappedConfig>) -> Result<Option<Config>, ()> {
+    Ok(config.lock().unwrap().clone())
+}
 
+#[tauri::command]
+fn get_models(config: State<'_, WrappedConfig>) -> Vec<String> {
+    let mut models: Vec<String> = Vec::new();
+
+    if let Some(ref config) = *config.lock().unwrap() {
+        let model_folder = config.model_folder.clone().unwrap();
+        let file_paths = fs::read_dir(model_folder).unwrap();
+
+        for path in file_paths {
+            let path_buf = path.unwrap().path();
+            let extension = path_buf.extension();
+            if extension.is_some() && extension.unwrap() == "bin" {
+                models.push(String::from(path_buf.to_str().unwrap()));
+            }
+        }
+    }
+
+    models
+}
+
+#[tauri::command]
+async fn update_model(model_path: &str, config: State<'_, WrappedConfig>, conversation_service: State<'_, ConversationService>) -> Result<(), String> {
+    if let Some(ref mut config) = *config.lock().unwrap() {
+        config.update_model_path(model_path);
+        conversation_service.update_model(config);
+    }
+    Ok(())
+}
+
+#[tauri::command]
+async fn update_config(new_config: Config, old_config: State<'_, WrappedConfig>, conversation_service: State<'_, ConversationService>) -> Result<bool, String> {
+    let mut loaded_model = false;
+    
+    *old_config.lock().unwrap() = Some(new_config);
+    if let Some(ref config) = *old_config.lock().unwrap() {
+        loaded_model = conversation_service.update_model(config);
+    }
+    Ok(loaded_model)
+}
+
+#[tauri::command]
+async fn initialize(app: tauri::AppHandle) -> Result<bool, ()> {
+    let config = Config::new();
+    let conversation_service = ConversationService::new(&config);
+    let loaded_model = conversation_service.model.lock().unwrap().is_some();
+    app.manage(conversation_service);
+    app.manage(Mutex::new(Some(config)));
+    Ok(loaded_model)
+}
+
+#[tauri::command]
+async fn pick_folder(app: tauri::AppHandle) -> Result<(), ()> {
+    dialog::FileDialogBuilder::new().pick_folder(move |folder_path| {
+        if folder_path.is_some() {
+            app.emit_all("folder_picked", folder_path.unwrap().to_str().unwrap()).unwrap();
+        }
+    });
+    Ok(())
+}
+
+fn main() {
     tauri::Builder::default()
-        .manage(conversation_service)
-        .invoke_handler(tauri::generate_handler![send_message, reset_conversation])
+        .invoke_handler(tauri::generate_handler![initialize, send_message, reset_conversation, get_config, get_models, update_model, update_config, pick_folder])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -59,7 +136,9 @@ fn get_model_response(conversation_service: &ConversationService) -> String {
     let mut buf = String::new();
 
     // let model = &*conversation_service.model.lock().unwrap(); // gguf
-    let model = conversation_service.model.lock().unwrap();
+    let model_guard = conversation_service.model.lock().unwrap();
+    let model_option = model_guard.as_ref();
+    let model = model_option.unwrap();
 
     let session_config = InferenceSessionConfig {
         n_batch: 256,
@@ -70,7 +149,7 @@ fn get_model_response(conversation_service: &ConversationService) -> String {
 
     session.infer::<Infallible>(
         // model.as_ref(), // gguf
-        &*model,
+        model,
         &mut rng,
         &llm::InferenceRequest {
             prompt: format!("{persona}\n\n{history}\n{assistant_name}").as_str().into(),

@@ -28,7 +28,7 @@ html, body {
 
 .container {
   margin: 0;
-  padding: 2em;
+  padding: 0em 1.75em 1.25em 1.75em;
   display: flex;
   height: 100%;
   flex-direction: column;
@@ -42,6 +42,7 @@ html, body {
   flex-grow: 1;
   overflow-y: auto;
   margin-bottom: 0.75em;
+  margin-top: 0.75em;
 }
 
 pre {
@@ -146,16 +147,15 @@ button {
 }
 
 #send-input {
-  margin-right: 5px;
+  margin-right: 10px;
   flex-grow: 1;
 }
 
-#reset-button {
-  margin-right: 5px;
+.icon-button {
   padding: 4px 7px 0px 7px;
 }
 
-#reset-button:disabled {
+.icon-button:disabled {
   fill: gray;
 }
 
@@ -178,7 +178,7 @@ button {
     background-color: #0f0f0f69;
   }
 
-  #reset-button {
+  .icon-button {
     fill: #ffffff;
   }
 }
