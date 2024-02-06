@@ -23,10 +23,8 @@ impl Config {
             let data = fs::read_to_string(app_settings_path).unwrap();
             serde_json::from_str(&data).unwrap()
         } else {
-            dotenv::dotenv().ok();
             let config = Config {
                 model_folder: Some(String::from(app_data_path.to_str().unwrap())),
-                model_path: Some(std::env::var("MODEL_PATH").expect("MODEL_PATH must be set")),
                 ..Default::default()
             };
             let data = serde_json::to_string_pretty(&config).unwrap();

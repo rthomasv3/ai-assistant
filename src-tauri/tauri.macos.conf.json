@@ -1,5 +1,5 @@
 {
     "build": {
-      "features": [ "metal" ]
+      "features": [ "" ]
     }
 }

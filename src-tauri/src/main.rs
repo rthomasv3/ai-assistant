@@ -8,7 +8,6 @@ use crate::models::config::Config;
 use conversation_service::ConversationService;
 use llm::KnownModel; // main
 use llm::InferenceSessionConfig;
-use tauri::AppHandle;
 use tauri::Manager;
 use tauri::State;
 use tauri::api::dialog;

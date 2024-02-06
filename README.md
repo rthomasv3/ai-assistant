@@ -2,8 +2,6 @@
 
 This is a simple AI chat assistant built using [Rust](https://www.rust-lang.org/) as the backend and [Tauri](https://tauri.app/) + [Vue 3](https://vuejs.org/) for the frontend. It supports all desktop platforms and can use your GPU to improve performance. The entire app compiles to just one executable and should be fairly small (~under 7MB). To get started you just need to add your models in the Model Folder found in Settings.
 
-GPU acceleration is set to `cublas` by default for both Windows and Linux, so to use the release you'll need the CUDA Toolkit installed. For Mac, `metal` is on by default.
-
 ![ai-assistant screenshot](screenshot3.png)
 
 
